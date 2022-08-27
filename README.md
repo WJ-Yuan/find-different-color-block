@@ -6,8 +6,10 @@
 Typescript4.x + Vue3 + pnpm
 
 ## TODO
-1. css样式优化
-2. diffColor算法
+1. ~~css样式优化~~
+2. ~~diffColor算法~~
+3. 增加增加音频资源
+4. ...
 
 
 
