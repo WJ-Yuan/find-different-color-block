@@ -42,7 +42,7 @@ const randomDiffRto = (): number => {
     return (Math.random() * 1 + 7) / 10;
   } else {
     // 0.8 - 0.85之间的随机数
-    return (Math.random() * 1 + 8) / 10 + Math.random() / 20;
+    return 0.8 + Math.random() / 20;
   }
 };
 
