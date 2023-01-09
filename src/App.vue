@@ -170,6 +170,9 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+#app {
+  text-align: center;
+}
 .challenge-handle {
   display: flex;
   justify-content: space-between;
@@ -207,5 +210,21 @@ button {
 
 .item-box {
   background-color: var(--background-color);
+}
+
+@media screen and (max-width: 400px) {
+  .challenge-handle {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .step-info {
+    width: 100%;
+  }
+
+  .grid-box {
+    width: 100%;
+    height: 100vw;
+  }
 }
 </style>
