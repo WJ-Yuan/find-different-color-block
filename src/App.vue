@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
+import failSound from "./assets/sound/fail.wav";
+import successSound from "./assets/sound/success.wav";
 
 type StateType = "wait" | "run" | "finish";
 type ColorType = [string, string];
@@ -33,7 +35,7 @@ const randomIntNumber = (n: number): number => {
 const randomDiffRto = (): number => {
   if (step.value <= 3) {
     // 0.4 - 0.5之间的随机数
-    return (Math.random() * 1 + 4) / 10 ;
+    return (Math.random() * 1 + 4) / 10;
   } else if (step.value <= 12) {
     // 0.5 - 0.7之间的随机数
     return (Math.random() * 2 + 5) / 10;
@@ -93,10 +95,30 @@ const stepChange = () => {
   });
 };
 
+type SoundMap = {
+  success: string;
+  fail: string;
+};
+
+const Sound: SoundMap = {
+  success: successSound,
+  fail: failSound,
+};
+
+// 音频处理
+const playSound = (type: keyof typeof Sound) => {
+  const sound = document.createElement("audio");
+  sound.src = Sound[type];
+  sound.play();
+};
+
 const selectDiffColor = (index: number) => {
   if (state.value === "run" && index === I.value) {
+    playSound("success");
     stepChange();
     startTimer();
+  } else if (state.value === "run" && index !== I.value) {
+    playSound("fail");
   }
 };
 
@@ -130,8 +152,12 @@ onBeforeUnmount(() => {
   <div class="step-info">第{{ step }}关</div>
   <div class="challenge-handle">
     <span>00:00:{{ time < 10 ? `0${time}` : time }}</span>
-    <button v-if="state === 'wait'" title="开始" @click="startGame">START</button>
-    <button v-if="state === 'finish'" title="重置" @click="resetGame">RESET</button>
+    <button v-if="state === 'wait'" title="开始" @click="startGame">
+      START
+    </button>
+    <button v-if="state === 'finish'" title="重置" @click="resetGame">
+      RESET
+    </button>
   </div>
   <div class="grid-box">
     <div
