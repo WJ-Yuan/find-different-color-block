@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch, onBeforeUnmount } from "vue";
-import failSound from "./assets/sound/fail.wav";
-import successSound from "./assets/sound/success.wav";
+import { ref, nextTick, onMounted, watch, onBeforeUnmount } from 'vue';
+import failSound from './assets/sound/fail.wav';
+import successSound from './assets/sound/success.wav';
 
-type StateType = "wait" | "run" | "finish";
+type StateType = 'wait' | 'run' | 'finish';
 type ColorType = [string, string];
 
 const n = ref<number>(1);
 const step = ref<number>(0);
 const I = ref<number>(0);
-const state = ref<StateType>("wait");
+const state = ref<StateType>('wait');
 const time = ref<number>(30);
 
 let t: any = null;
 
 const startGame = () => {
-  state.value = "run";
+  state.value = 'run';
   startTimer();
 };
 
@@ -23,7 +23,7 @@ const resetGame = () => {
   step.value = 0;
   n.value = 1;
   I.value = 0;
-  state.value = "wait";
+  state.value = 'wait';
   time.value = 30;
   stepChange();
 };
@@ -68,20 +68,14 @@ const resetColor = (number: number): void => {
   const [baseColor, diffColor] = randomColor();
   const r = Math.random();
 
-  document.documentElement.style.setProperty("--number", `${number}`);
-  number > 10 && document.documentElement.style.setProperty("--gap", "5px");
-  const box = document.querySelectorAll(".item-box");
+  document.documentElement.style.setProperty('--number', `${number}`);
+  number > 10 && document.documentElement.style.setProperty('--gap', '5px');
+  const box = document.querySelectorAll('.item-box');
 
   box.forEach((html) => {
-    (html as HTMLDivElement).style.setProperty(
-      "background-color",
-      r > 0.5 ? baseColor : diffColor
-    );
+    (html as HTMLDivElement).style.setProperty('background-color', r > 0.5 ? baseColor : diffColor);
   });
-  (box[I.value] as HTMLDivElement).style.setProperty(
-    "background-color",
-    r > 0.5 ? diffColor : baseColor
-  );
+  (box[I.value] as HTMLDivElement).style.setProperty('background-color', r > 0.5 ? diffColor : baseColor);
 };
 
 const stepChange = () => {
@@ -107,18 +101,18 @@ const Sound: SoundMap = {
 
 // 音频处理
 const playSound = (type: keyof typeof Sound) => {
-  const sound = document.createElement("audio");
+  const sound = document.createElement('audio');
   sound.src = Sound[type];
   sound.play();
 };
 
 const selectDiffColor = (index: number) => {
-  if (state.value === "run" && index === I.value) {
-    playSound("success");
+  if (state.value === 'run' && index === I.value) {
+    playSound('success');
     stepChange();
     startTimer();
-  } else if (state.value === "run" && index !== I.value) {
-    playSound("fail");
+  } else if (state.value === 'run' && index !== I.value) {
+    playSound('fail');
   }
 };
 
@@ -139,7 +133,7 @@ onMounted(() => {
 watch(time, (val, _) => {
   if (val === 0) {
     clearTimer();
-    state.value = "finish";
+    state.value = 'finish';
   }
 });
 
@@ -152,20 +146,11 @@ onBeforeUnmount(() => {
   <div class="step-info">第{{ step }}关</div>
   <div class="challenge-handle">
     <span>00:00:{{ time < 10 ? `0${time}` : time }}</span>
-    <button v-if="state === 'wait'" title="开始" @click="startGame">
-      START
-    </button>
-    <button v-if="state === 'finish'" title="重置" @click="resetGame">
-      RESET
-    </button>
+    <button v-if="state === 'wait'" title="开始" @click="startGame">START</button>
+    <button v-if="state === 'finish'" title="重置" @click="resetGame">RESET</button>
   </div>
   <div class="grid-box">
-    <div
-      v-for="i in n"
-      :key="i + 'index'"
-      class="item-box"
-      @click="selectDiffColor(i - 1)"
-    ></div>
+    <div v-for="i in n" :key="i + 'index'" class="item-box" @click="selectDiffColor(i - 1)"></div>
   </div>
 </template>
 
