@@ -30,7 +30,7 @@ jobs:
       run: npm run build
 
     - name: Deploy to Github Pages
-      uses: JamesIves/github-pages-deploy-action@main
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: master
         folder: docs
