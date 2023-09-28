@@ -1,63 +1,38 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, onBeforeUnmount } from 'vue';
-import failSound from './assets/sound/fail.wav';
-import successSound from './assets/sound/success.wav';
+import { State, GameStatus, GameMode } from './constants';
+import { useSound, useRandomColor, useMode } from '@/composables';
 
-type StateType = 'wait' | 'run' | 'finish';
-type ColorType = [string, string];
+const { isSilent, changeSilent, playSound } = useSound();
+const { randomColor } = useRandomColor();
+const { mode, changeMode } = useMode();
 
 const n = ref<number>(1);
 const step = ref<number>(0);
-const I = ref<number>(0);
-const state = ref<StateType>('wait');
+const IBox = ref<number>(0);
+const state = ref<State>(State.WAIT);
 const time = ref<number>(30);
 
-let t: any = null;
+let t: unknown = null;
 
 const startGame = () => {
-  state.value = 'run';
+  state.value = State.RUN;
   startTimer();
 };
 
 const resetGame = () => {
   step.value = 0;
   n.value = 1;
-  I.value = 0;
-  state.value = 'wait';
+  IBox.value = 0;
+  state.value = State.WAIT;
   time.value = 30;
   stepChange();
 };
 
-const randomIntNumber = (n: number): number => {
-  return Math.floor(Math.random() * n);
-};
-
-const randomDiffRto = (): number => {
-  if (step.value <= 3) {
-    // 0.4 - 0.5之间的随机数
-    return (Math.random() * 1 + 4) / 10;
-  } else if (step.value <= 12) {
-    // 0.5 - 0.7之间的随机数
-    return (Math.random() * 2 + 5) / 10;
-  } else if (step.value <= 18) {
-    // 0.7 - 0.8之间的随机数
-    return (Math.random() * 1 + 7) / 10;
-  } else {
-    // 0.8 - 0.85之间的随机数
-    return 0.8 + Math.random() / 20;
-  }
-};
-
-const randomColor = (): ColorType => {
-  const color1 = randomIntNumber(255);
-  const color2 = randomIntNumber(255);
-  const color3 = randomIntNumber(255);
-  if (color1 === 255 && color2 === 255 && color3 === 255) {
-    return randomColor();
-  }
-  const baseColor = `rgb(${color1}, ${color2}, ${color3})`;
-  const diffColor = `rgba(${color1}, ${color2}, ${color3}, ${randomDiffRto()})`;
-  return [baseColor, diffColor];
+const quitGame = () => {
+  clearTimer();
+  resetGame();
+  changeMode(GameMode.NULL);
 };
 
 const randomDiffIndex = (i: number): number => {
@@ -65,7 +40,7 @@ const randomDiffIndex = (i: number): number => {
 };
 
 const resetColor = (number: number): void => {
-  const [baseColor, diffColor] = randomColor();
+  const [baseColor, diffColor] = randomColor(step.value);
   const r = Math.random();
 
   document.documentElement.style.setProperty('--number', `${number}`);
@@ -75,7 +50,7 @@ const resetColor = (number: number): void => {
   box.forEach((html) => {
     (html as HTMLDivElement).style.setProperty('background-color', r > 0.5 ? baseColor : diffColor);
   });
-  (box[I.value] as HTMLDivElement).style.setProperty('background-color', r > 0.5 ? diffColor : baseColor);
+  (box[IBox.value] as HTMLDivElement).style.setProperty('background-color', r > 0.5 ? diffColor : baseColor);
 };
 
 const stepChange = () => {
@@ -83,58 +58,44 @@ const stepChange = () => {
   step.value++;
   n.value = step.value < 20 ? Math.pow(step.value + 1, 2) : 400;
   const number = step.value < 20 ? step.value + 1 : 20;
-  I.value = randomDiffIndex(n.value);
+  IBox.value = randomDiffIndex(n.value);
   nextTick(() => {
     resetColor(number);
   });
 };
 
-type SoundMap = {
-  success: string;
-  fail: string;
-};
-
-const Sound: SoundMap = {
-  success: successSound,
-  fail: failSound,
-};
-
-// 音频处理
-const playSound = (type: keyof typeof Sound) => {
-  const sound = document.createElement('audio');
-  sound.src = Sound[type];
-  sound.play();
-};
-
 const selectDiffColor = (index: number) => {
-  if (state.value === 'run' && index === I.value) {
-    playSound('success');
+  if (state.value === 'run' && index === IBox.value) {
+    !isSilent.value && playSound(GameStatus.SUCCESS);
     stepChange();
     startTimer();
-  } else if (state.value === 'run' && index !== I.value) {
-    playSound('fail');
+  } else if (state.value === 'run' && index !== IBox.value) {
+    !isSilent.value && playSound(GameStatus.FAIL);
   }
 };
 
 const startTimer = () => {
+  if (mode.value === GameMode.ENDLESS) {
+    return;
+  }
   time.value--;
   t = setTimeout(startTimer, 1000);
 };
 
 const clearTimer = () => {
-  clearTimeout(t);
+  clearTimeout(t as undefined);
   t = null;
 };
-
-onMounted(() => {
-  stepChange();
-});
 
 watch(time, (val, _) => {
   if (val === 0) {
     clearTimer();
-    state.value = 'finish';
+    state.value = State.FINISH;
   }
+});
+
+onMounted(() => {
+  stepChange();
 });
 
 onBeforeUnmount(() => {
@@ -143,25 +104,53 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="step-info">第{{ step }}关</div>
-  <div class="challenge-handle">
-    <span>00:00:{{ time < 10 ? `0${time}` : time }}</span>
-    <button v-if="state === 'wait'" title="开始" @click="startGame">START</button>
-    <button v-if="state === 'finish'" title="重置" @click="resetGame">RESET</button>
+  <div v-if="mode === GameMode.NULL">
+    <div class="step-info" style="margin-bottom: 40px">请选择挑战模式</div>
+    <div style="text-align: center; max-width: 400px">
+      <button @click="changeMode(GameMode.ENDLESS)">无尽模式</button>
+    </div>
+    <div style="text-align: center; margin-top: 20px; max-width: 400px">
+      <button @click="changeMode(GameMode.CHALLENGE)">挑战模式</button>
+    </div>
   </div>
-  <div class="grid-box">
-    <div v-for="i in n" :key="i + 'index'" class="item-box" @click="selectDiffColor(i - 1)"></div>
+  <div v-show="mode !== GameMode.NULL">
+    <div class="step-info">第{{ step }}关</div>
+    <div class="challenge-handle">
+      <span>
+        <span v-if="mode === GameMode.CHALLENGE" class="time">00:00:{{ time < 10 ? `0${time}` : time }}</span>
+      </span>
+      <span style="height: 32px; line-height: 32px; display: inline-flex; justify-content: flex-end">
+        <span v-show="state === State.WAIT" title="开始" @click="startGame">
+          <img style="width: 32px; height: 32px" src="/src/assets/icon/play.svg" />
+        </span>
+        <span v-show="state === State.FINISH" title="重置" @click="resetGame">
+          <img style="width: 32px; height: 32px" src="/src/assets/icon/reset.svg" />
+        </span>
+        <span v-show="state === State.RUN" title="退出" @click="quitGame">
+          <img style="width: 32px; height: 32px" src="/src/assets/icon/quit.svg" />
+        </span>
+        <span style="height: 32px; line-height: 32px; margin-left: 8px" @click="changeSilent">
+          <img v-show="isSilent" style="width: 32px; height: 32px" title="静音" src="/src/assets/icon/silent.svg" />
+          <img v-show="!isSilent" style="width: 32px; height: 32px" title="声音" src="/src/assets/icon/sound.svg" />
+        </span>
+      </span>
+    </div>
+
+    <div class="grid-box">
+      <div v-for="i in n" :key="i + 'index'" class="item-box" @click="selectDiffColor(i - 1)"></div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 #app {
   text-align: center;
+  cursor: pointer;
 }
 .challenge-handle {
-  display: flex;
-  justify-content: space-between;
-  width: 400px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 400px;
   margin: 10px 0;
   line-height: 32px;
   height: 30px;
@@ -170,6 +159,8 @@ onBeforeUnmount(() => {
 }
 button {
   height: 32px;
+  width: calc(100% - 100px);
+  min-width: 100px;
   border: none;
   background-color: rgb(255, 182, 98);
   border-radius: 5px;
@@ -180,8 +171,26 @@ button {
   width: 400px;
   text-align: center;
   margin: 10px 0;
-  font-weight: 600;
+  font-weight: 800;
   font-size: 24px;
+  color: #ffb662;
+  animation: infinite ease-in 0.5s shrink;
+}
+
+.time {
+  color: #ffb662;
+  font-weight: 700;
+  animation: infinite ease-in 0.5s shrink;
+}
+
+@keyframes shrink {
+  0% {
+    text-shadow: #fff 1px 0 10px;
+  }
+
+  100% {
+    text-shadow: #ecf908 1px 0 10px;
+  }
 }
 
 .grid-box {
