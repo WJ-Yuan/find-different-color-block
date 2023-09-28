@@ -33,6 +33,7 @@ const quitGame = () => {
   clearTimer();
   resetGame();
   changeMode(GameMode.NULL);
+  changeSilent(false);
 };
 
 const randomDiffIndex = (i: number): number => {
@@ -126,10 +127,10 @@ onBeforeUnmount(() => {
         <span v-show="state === State.FINISH" title="重置" @click="resetGame">
           <img style="width: 32px; height: 32px" src="/src/assets/icon/reset.svg" />
         </span>
-        <span v-show="state === State.RUN" title="退出" @click="quitGame">
+        <span style="margin-left: 8px" title="退出" @click="quitGame">
           <img style="width: 32px; height: 32px" src="/src/assets/icon/quit.svg" />
         </span>
-        <span style="height: 32px; line-height: 32px; margin-left: 8px" @click="changeSilent">
+        <span style="height: 32px; line-height: 32px; margin-left: 8px" @click="changeSilent(!isSilent)">
           <img v-show="isSilent" style="width: 32px; height: 32px" title="静音" src="/src/assets/icon/silent.svg" />
           <img v-show="!isSilent" style="width: 32px; height: 32px" title="声音" src="/src/assets/icon/sound.svg" />
         </span>

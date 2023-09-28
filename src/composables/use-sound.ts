@@ -6,8 +6,8 @@ export const useSound = () => {
   const failSound = document.createElement('audio');
   const isSilent = ref<boolean>(false);
 
-  const changeSilent = () => {
-    isSilent.value = !isSilent.value;
+  const changeSilent = (silent: boolean) => {
+    isSilent.value = silent;
   };
 
   const playSound = (type: GameStatus) => {
@@ -25,8 +25,8 @@ export const useSound = () => {
   };
 
   onMounted(() => {
-    successSound.src = '/src/assets/sound/success.wav';
-    failSound.src = '/src/assets/sound/fail.wav';
+    successSound.src = './sound/success.wav';
+    failSound.src = './sound/fail.wav';
   });
 
   return {
