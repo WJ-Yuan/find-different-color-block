@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">diff-color</string>
+    <string name="title_activity_main">diff-color</string>
+    <string name="package_name">com.davidyuan.find_diff_color</string>
+    <string name="custom_url_scheme">com.davidyuan.find_diff_color</string>
+</resources>
