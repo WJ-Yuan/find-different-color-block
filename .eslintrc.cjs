@@ -16,5 +16,6 @@ module.exports = {
   },
   rules: {
     semi: [2, 'always'],
+    'vue/multi-word-component-names': 0,
   },
 };
