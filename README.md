@@ -6,10 +6,18 @@
 
 Typescript4.x + Vue3 + pnpm
 
-## TODO
+## 开发
 
-1. ~~css 样式优化~~
-2. ~~diffColor 算法~~
-3. ~~增加增加音频资源~~
-4. ~~无尽模式/挑战模式~~
-5. ~~静音~~
+```sh
+# 本地开发
+pnpm install
+pnpm run dev
+
+# git pages 打败
+pnpm run build:web
+
+# 安卓端开发
+pnpm run build
+npx cap sync
+npx cap open android
+```
